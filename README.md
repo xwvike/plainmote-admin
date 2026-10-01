@@ -1,64 +1,56 @@
 # PlainMote Admin
 
-[PlainMote](https://github.com/xwvike/plainmote) 的管理端：一个纯客户端运行的单页应用，只调用 PlainMote 的签名管理接口（`/_admin/v1/`），用于查看部署概况和执行管理操作。
+English | [简体中文](README.zh-CN.md)
 
-- **没有后端**。页面可以部署为任意静态站点，也可以只在本机运行。
-- **私钥只在浏览器中**。私钥以不可导出的 `CryptoKey` 形式导入，保存在浏览器的 IndexedDB 中，页面脚本无法读出其原始内容；服务端只持有公钥。
-- **不接触内容**。管理接口不返回资源正文、历史版本、分享地址或访问者信息，本界面也不提供任何查看内容的入口。
-- **每项变更都有原因**。所有有副作用的操作都必须填写原因，原因写入服务端只追加的审计记录。
-- 支持简体中文与英文，支持浅色与深色外观。
+Administration console for [PlainMote](https://github.com/xwvike/plainmote). A frontend-only application that queries deployment status and performs administrative operations on users, resources, links and plans through the signed admin API (`/_admin/v1/`).
 
-接口约定见 PlainMote 仓库中的 [`docs/admin-api.md`](https://github.com/xwvike/plainmote/blob/main/docs/admin-api.md)。
+Hosted instance: <https://xwvike.github.io/plainmote-admin/>
 
-## 浏览器要求
+## Design
 
-需要 WebCrypto 的 Ed25519 支持：Chrome 137、Firefox 129、Safari 17 或更高版本。
+- **No server component.** Requests are signed in the browser and sent directly to the PlainMote service.
+- **The private key does not leave the browser.** It is imported as a non-extractable Ed25519 `CryptoKey` and stored in IndexedDB; the service holds public keys only.
+- **Metadata only.** The admin API returns no resource bodies, earlier versions, share addresses or visitor details, and the console provides no means of viewing content.
+- **Changes carry a reason.** Every operation with side effects requires a reason, which the service records in its append-only audit log.
 
-## 准备服务端
+API contract: [`docs/admin-api.md`](https://github.com/xwvike/plainmote/blob/main/docs/admin-api.md).
 
-1. 在 PlainMote 仓库中生成密钥对：
+## Requirements
 
-   ```bash
-   go run ./cmd/plainmote-admin keygen
-   ```
+- A browser supporting Ed25519 in WebCrypto: Chrome 137, Firefox 129, Safari 17 or later.
+- A PlainMote deployment with the admin API enabled.
 
-   输出中的 `public` 填入服务端的 `PLAINMOTE_ADMIN_KEYS`；`private` 是 JWK 格式的私钥，由管理员自行保管，不要放到服务器上。
+## Server configuration
 
-2. 将管理端页面的来源加入服务端的 `PLAINMOTE_ADMIN_ORIGINS`，例如本地开发时为 `http://localhost:5173`。来源未列入时，浏览器会拦截响应，界面提示“无法连接”。
+| Variable | Description |
+| --- | --- |
+| `PLAINMOTE_ADMIN_KEYS` | Public keys permitted to sign admin requests, comma-separated. |
+| `PLAINMOTE_ADMIN_ORIGINS` | Origins permitted to call the admin API cross-origin from a browser, e.g. `https://xwvike.github.io`. |
 
-## 本地运行
+Key pairs are generated with `go run ./cmd/plainmote-admin keygen` in the PlainMote repository. The public key is added to `PLAINMOTE_ADMIN_KEYS`; the private key (JWK) is imported into the console and is not placed on the server.
+
+## Environments
+
+An environment pairs a PlainMote service address with its private key. Multiple environments may be stored, and each tab selects its own. Production environments are marked in the interface, and deletions within them require the object name to be entered for confirmation.
+
+## Development
 
 ```bash
 npm install
-npm run dev
-```
-
-开发服务器固定在 `http://localhost:5173`。打开后在“环境”页面添加一个环境：填写 PlainMote 的地址，选择或粘贴私钥 JWK。可以添加多个环境（例如本地与生产），在“环境”页面切换；标记为生产的环境在界面上有醒目标记，删除操作须再次输入对象名称。
-
-## 部署
-
-```bash
-npm run build
-```
-
-将 `dist/` 作为静态站点发布即可。应用使用浏览器路由，静态服务器须把未知路径回退到 `index.html`。部署在子路径下时，构建时以 `BASE_PATH` 指定该路径，例如 `BASE_PATH=/plainmote-admin/ npm run build`。发布后记得把该站点的来源加入 `PLAINMOTE_ADMIN_ORIGINS`。
-
-仓库自带 GitHub Pages 工作流（`.github/workflows/pages.yml`）：推送到 `main` 后自动测试、构建并发布到 `https://<用户名>.github.io/<仓库名>/`。
-
-私钥保存在浏览器中按来源（协议、域名与端口）划分的存储里，与路径无关。同一来源下的其他页面（例如同一个 `github.io` 域名下的其他 Pages 站点）可以访问这份存储，因此应部署在只承载可信页面的来源上，必要时使用独立的子域名。
-
-## 测试
-
-```bash
+npm run dev      # http://localhost:5173
 npm test
 ```
 
-签名相关的单元测试不需要服务端。若要同时对一个运行中的 PlainMote 验证签名，设置以下环境变量（私钥对应的公钥须已列入该服务的 `PLAINMOTE_ADMIN_KEYS`）：
+With `PLAINMOTE_ADMIN_TEST_URL` and `PLAINMOTE_ADMIN_TEST_KEY` set, the signing tests also run against a live service. The latter is a JWK file whose public key is listed in that service's `PLAINMOTE_ADMIN_KEYS`.
 
-```bash
-PLAINMOTE_ADMIN_TEST_URL=http://localhost:8964 PLAINMOTE_ADMIN_TEST_KEY=path/to/dev.jwk npm test
-```
+## Deployment
 
-## 许可证
+`npm run build` outputs a static site to `dist/`. `BASE_PATH` sets the deployment path, e.g. `BASE_PATH=/plainmote-admin/`. The application uses browser routing; the server must respond to unknown paths with `index.html`.
+
+The workflow `.github/workflows/pages.yml` runs the tests and the build on every push to `main` and publishes to GitHub Pages (`https://<owner>.github.io/<repository>/`), with a copy of `index.html` as `404.html`.
+
+Key storage is isolated by origin, not by path; every page of the same origin can use the stored keys. Deploy to an origin that serves trusted pages only.
+
+## License
 
 [MIT](LICENSE)
