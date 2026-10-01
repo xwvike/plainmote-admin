@@ -24,7 +24,7 @@ export default function App() {
   const { ready } = useTargets()
   if (!ready) return null
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Navigate to="/overview" replace />} />

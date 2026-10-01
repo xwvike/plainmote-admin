@@ -60,7 +60,7 @@ function Brand() {
   return (
     <SidebarMenuButton size="lg" asChild className="hover:bg-transparent active:bg-transparent">
       <NavLink to="/overview">
-        <img src="/logo.png" alt="" width={32} height={32} className="size-8 shrink-0 rounded-full" />
+        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" width={32} height={32} className="size-8 shrink-0 rounded-full" />
         <span className="grid min-w-0 leading-tight">
           <span className="truncate text-sm font-semibold">PlainMote</span>
           <span className="truncate text-xs text-muted-foreground">{t('app.console')}</span>

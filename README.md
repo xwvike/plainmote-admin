@@ -41,7 +41,11 @@ npm run dev
 npm run build
 ```
 
-将 `dist/` 作为静态站点发布即可。应用使用浏览器路由，静态服务器须把未知路径回退到 `index.html`。发布后记得把该站点的来源加入 `PLAINMOTE_ADMIN_ORIGINS`。
+将 `dist/` 作为静态站点发布即可。应用使用浏览器路由，静态服务器须把未知路径回退到 `index.html`。部署在子路径下时，构建时以 `BASE_PATH` 指定该路径，例如 `BASE_PATH=/plainmote-admin/ npm run build`。发布后记得把该站点的来源加入 `PLAINMOTE_ADMIN_ORIGINS`。
+
+仓库自带 GitHub Pages 工作流（`.github/workflows/pages.yml`）：推送到 `main` 后自动测试、构建并发布到 `https://<用户名>.github.io/<仓库名>/`。
+
+私钥保存在浏览器中按来源（协议、域名与端口）划分的存储里，与路径无关。同一来源下的其他页面（例如同一个 `github.io` 域名下的其他 Pages 站点）可以访问这份存储，因此应部署在只承载可信页面的来源上，必要时使用独立的子域名。
 
 ## 测试
 
