@@ -17,6 +17,8 @@ import { useTargets } from '@/lib/target-context'
 import type { List, Plan } from '@/lib/types'
 
 const UNITS = { MB: 1024 ** 2, GB: 1024 ** 3 } as const
+// The service counts a name's length in characters (code points).
+const NAME_MAX = 100
 
 export function PlansPage() {
   const { t } = useTranslation()
@@ -111,7 +113,7 @@ function CreatePlan({ onClose, onDone }: { onClose: () => void; onDone: () => vo
   const maxResources = Number(resources)
   const maxStorage = Math.round(Number(storage) * UNITS[unit])
   const ready =
-    name.trim() !== '' &&
+    name.trim() !== '' && [...name.trim()].length <= NAME_MAX &&
     resources !== '' && Number.isInteger(maxResources) && maxResources >= 0 &&
     storage !== '' && Number.isFinite(maxStorage) && maxStorage >= 0
 
@@ -131,7 +133,7 @@ function CreatePlan({ onClose, onDone }: { onClose: () => void; onDone: () => vo
     >
       <Field>
         <FieldLabel htmlFor={`${id}-name`}>{t('plans.dialog.name')}</FieldLabel>
-        <Input id={`${id}-name`} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        <Input id={`${id}-name`} value={name} onChange={(e) => setName(e.target.value)} maxLength={NAME_MAX} autoFocus />
       </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field>
