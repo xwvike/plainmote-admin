@@ -13,7 +13,7 @@
 - **仅涉及元数据。** 管理接口不返回资源正文、历史版本、分享地址及访问者信息，界面亦不提供内容查看功能。
 - **变更须附原因。** 一切有副作用的操作均须填写原因，由服务端写入只追加的审计记录。
 
-接口约定见 [`docs/admin-api.md`](https://github.com/xwvike/plainmote/blob/main/docs/admin-api.md)。
+接口约定见 [`docs/admin.zh-CN.md`](https://github.com/xwvike/plainmote/blob/main/docs/admin.zh-CN.md)。
 
 ## 运行要求
 

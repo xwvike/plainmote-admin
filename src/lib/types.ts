@@ -1,4 +1,4 @@
-// Response shapes of PlainMote's admin interface (docs/admin-api.md). Times
+// Response shapes of PlainMote's admin interface (docs/admin.md). Times
 // are RFC 3339 strings in UTC; sizes are bytes.
 
 export interface List<T> {

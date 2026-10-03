@@ -13,7 +13,7 @@ Hosted instance: <https://xwvike.github.io/plainmote-admin/>
 - **Metadata only.** The admin API returns no resource bodies, earlier versions, share addresses or visitor details, and the console provides no means of viewing content.
 - **Changes carry a reason.** Every operation with side effects requires a reason, which the service records in its append-only audit log.
 
-API contract: [`docs/admin-api.md`](https://github.com/xwvike/plainmote/blob/main/docs/admin-api.md).
+API contract: [`docs/admin.md`](https://github.com/xwvike/plainmote/blob/main/docs/admin.md).
 
 ## Requirements
 

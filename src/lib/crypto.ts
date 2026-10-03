@@ -1,4 +1,4 @@
-// Signing for PlainMote's admin interface, following docs/admin-api.md in the
+// Signing for PlainMote's admin interface, following docs/admin.md in the
 // PlainMote repository. Everything here runs on WebCrypto, so it works the
 // same in the browser and under Node for tests.
 
