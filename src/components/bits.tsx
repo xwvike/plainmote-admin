@@ -139,7 +139,7 @@ export function Facts({ items }: { items: [ReactNode, ReactNode][] }) {
   )
 }
 
-export function Mono({ children, className }: { children: ReactNode; className?: string }) {
+export function Mono({ children, className }: { children?: ReactNode; className?: string }) {
   return <span className={cn('font-mono text-[0.92em]', className)}>{children}</span>
 }
 

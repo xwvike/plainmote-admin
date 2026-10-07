@@ -1,5 +1,7 @@
 // Response shapes of PlainMote's admin interface (docs/admin.md). Times
-// are RFC 3339 strings in UTC; sizes are bytes.
+// are RFC 3339 strings in UTC; sizes are bytes. Fields marked optional are
+// absent from services older than the one that introduced them, so the page
+// shows nothing for them there rather than a wrong value.
 
 export interface List<T> {
   items: T[]
@@ -23,7 +25,7 @@ export interface Overview {
     history_retention_days: number
   }
   health: { database: string; object_storage: string }
-  users: { total: number; suspended: number; signed_in_last_30d: number }
+  users: { total: number; suspended: number; signed_in_last_30d: number; master_password?: number }
   resources: {
     total: number
     remote: number
@@ -31,6 +33,10 @@ export interface Overview {
     current_bytes: number
     history_bytes: number
     history_versions: number
+    /** Signed-in quick shares not yet kept; included in total. */
+    quick_shares?: number
+    /** End-to-end encrypted, quick shares among them. */
+    encrypted?: number
   }
   links: { live: number; ended_last_7d: number }
   access: { last_24h: Record<AccessOutcome, number>; last_7d: Record<AccessOutcome, number> }
@@ -60,6 +66,9 @@ export interface User {
   live_links: number
   storage: { current_bytes: number; history_bytes: number; limit_bytes: number }
   plans?: Grant[]
+  /** Whether a master password for end-to-end encryption is set; none of its keys is ever returned. */
+  master_password?: boolean
+  master_password_at?: string | null
 }
 
 export interface Plan {
@@ -88,6 +97,13 @@ export interface Resource {
   updated_at: string
   status: 'active' | 'taken_down'
   takedown_reason: string
+  /** Set on a signed-in quick share not yet kept as a resource: when it is deleted. */
+  expires_at?: string | null
+  /**
+   * master_password: name and filename are encrypted too, so both are empty.
+   * link_key: an older encrypted quick share whose key is only in its link.
+   */
+  encrypted?: '' | 'master_password' | 'link_key'
 }
 
 export interface Link {

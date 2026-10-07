@@ -1,4 +1,5 @@
 import { RefreshCwIcon } from 'lucide-react'
+import type { ParseKeys } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Facts, Meter, Mono, PageHeader, Stat, StatusBadge, Time } from '@/components/bits'
 import { ErrorAlert } from '@/components/request-error'
@@ -45,6 +46,12 @@ export function OverviewPage() {
     )
   }
 
+  // Counts the service reports, joined; one an older service lacks is left out.
+  const parts = (items: [ParseKeys, number | undefined][]) =>
+    items
+      .filter((item): item is [ParseKeys, number] => item[1] !== undefined)
+      .map(([key, n]) => t(key, { n: f.number(n) }) as string)
+      .join(' · ')
   const max7d = Math.max(1, ...ACCESS_OUTCOMES.map((k) => o.access.last_7d[k] ?? 0))
   const modes = t('overview.registrationModes', { returnObjects: true }) as Record<string, string>
 
@@ -81,12 +88,21 @@ export function OverviewPage() {
         <Stat
           label={t('overview.users')}
           value={f.number(o.users.total)}
-          sub={t('overview.usersSub', { suspended: f.number(o.users.suspended), signedIn: f.number(o.users.signed_in_last_30d) })}
+          sub={parts([
+            ['overview.usersParts.suspended', o.users.suspended],
+            ['overview.usersParts.signedIn', o.users.signed_in_last_30d],
+            ['overview.usersParts.masterPassword', o.users.master_password],
+          ])}
         />
         <Stat
           label={t('overview.resources')}
           value={f.number(o.resources.total)}
-          sub={t('overview.resourcesSub', { remote: f.number(o.resources.remote), takenDown: f.number(o.resources.taken_down) })}
+          sub={parts([
+            ['overview.resourcesParts.quickShares', o.resources.quick_shares],
+            ['overview.resourcesParts.encrypted', o.resources.encrypted],
+            ['overview.resourcesParts.remote', o.resources.remote],
+            ['overview.resourcesParts.takenDown', o.resources.taken_down],
+          ])}
         />
         <Stat label={t('overview.links')} value={f.number(o.links.live)} sub={t('overview.linksSub', { ended: f.number(o.links.ended_last_7d) })} />
         <Stat

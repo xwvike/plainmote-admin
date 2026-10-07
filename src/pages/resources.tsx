@@ -1,6 +1,6 @@
-import { XIcon } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
+import { ArrowRightIcon, ClockIcon, LockIcon, XIcon } from 'lucide-react'
+import { Trans, useTranslation } from 'react-i18next'
+import { Link as RouterLink, useNavigate } from 'react-router'
 import { shortId } from '@/components/audit-table'
 import { EmptyRow, Mono, Pager, PageHeader, ResourceStatus, Time } from '@/components/bits'
 import { SearchBox, Segmented } from '@/components/filters'
@@ -16,27 +16,46 @@ import { ANONYMOUS_LOGIN, type List, type Resource } from '@/lib/types'
 
 const SIZE = 20
 
-export function ResourceKind({ resource }: { resource: Resource }) {
+const tag = 'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs whitespace-nowrap'
+
+/** Where the content lives, and whether it is a quick share or encrypted. */
+export function ResourceKind({ resource: r }: { resource: Resource }) {
   const { t } = useTranslation()
-  if (resource.kind === 'stored') return <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t('resources.stored')}</span>
+  const f = useFormat()
   return (
-    <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-      {t('resources.remote')} · <Mono>{resource.origin_host}</Mono>
+    <span className="inline-flex flex-wrap gap-1">
+      <span className={`${tag} bg-muted text-muted-foreground`}>
+        {r.kind === 'stored' ? t('resources.stored') : <>{t('resources.remote')} · <Mono>{r.origin_host}</Mono></>}
+      </span>
+      {r.expires_at && (
+        <span className={`${tag} bg-warning/15 text-warning`} title={r.expires_at}>
+          <ClockIcon className="size-3" />
+          {t('resources.tagQuickShare')} · {t('resources.deletesAt', { time: f.relative(r.expires_at) })}
+        </span>
+      )}
+      {r.encrypted && (
+        <span className={`${tag} bg-accent text-accent-foreground`}>
+          <LockIcon className="size-3" />
+          {t('resources.tagEncrypted')}
+        </span>
+      )}
     </span>
   )
 }
 
-/** The resource's name, or a marked placeholder when it has none. */
+/** The resource's name, or a marked placeholder when it has none or it is encrypted. */
 export function ResourceName({ resource }: { resource: Resource }) {
   const { t } = useTranslation()
   const label = resourceLabel(resource)
   if (label) return <>{label}</>
   return (
     <span className="font-normal text-muted-foreground">
-      {t('resource.unnamed')} <Mono>{resource.id.slice(0, 8)}</Mono>
+      {resource.encrypted ? t('resource.encryptedLabel') : t('resource.unnamed')} <Mono>{resource.id.slice(0, 8)}</Mono>
     </span>
   )
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export function OwnerName({ resource }: { resource: Resource }) {
   const { t } = useTranslation()
@@ -47,15 +66,19 @@ export function ResourcesPage() {
   const { t } = useTranslation()
   const f = useFormat()
   const navigate = useNavigate()
-  const { values, page, set } = useSearchState(['q', 'status', 'owner'] as const)
+  const { values, page, set } = useSearchState(['q', 'status', 'owner', 'kind', 'encrypted'] as const)
   const { data, error, loading, reload } = useApi<List<Resource>>('resources', {
     q: values.q,
     status: values.status,
     owner: values.owner,
+    kind: values.kind,
+    encrypted: values.encrypted,
     page,
     size: SIZE,
   })
   const ownerLogin = data?.items[0]?.owner.id === values.owner ? data.items[0].owner.login : shortId(values.owner)
+  // The search matches names only; an ID, the way to reach an encrypted resource, is offered as a link.
+  const idQuery = UUID.test(values.q.trim()) ? values.q.trim().toLowerCase() : null
 
   return (
     <>
@@ -72,6 +95,26 @@ export function ResourcesPage() {
             ['taken_down', t('resources.filter.taken_down')],
           ]}
         />
+        <Segmented
+          label={t('resources.col.kind')}
+          value={values.kind || 'all'}
+          onChange={(v) => set({ kind: v === 'all' ? '' : v })}
+          options={[
+            ['all', t('resources.kindFilter.all')],
+            ['resource', t('resources.kindFilter.resource')],
+            ['quick_share', t('resources.kindFilter.quick_share')],
+          ]}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className={values.encrypted ? 'border-primary/40 bg-accent text-primary hover:bg-accent' : undefined}
+          aria-pressed={Boolean(values.encrypted)}
+          onClick={() => set({ encrypted: values.encrypted ? '' : '1' })}
+        >
+          <LockIcon />
+          {t('resources.encryptedOnly')}
+        </Button>
         {values.owner && (
           <span className="inline-flex h-8 items-center gap-1 rounded-md border border-dashed pr-1 pl-3 text-[13px]">
             {t('resources.owner', { login: ownerLogin })}
@@ -81,6 +124,17 @@ export function ResourcesPage() {
           </span>
         )}
       </div>
+      {idQuery && (
+        <RouterLink
+          to={`/resources/${idQuery}`}
+          className="flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5 text-[13px] text-primary hover:bg-muted"
+        >
+          <ArrowRightIcon className="size-4" />
+          <span>
+            <Trans i18nKey="resources.openById" values={{ id: idQuery }} components={{ code: <Mono /> }} />
+          </span>
+        </RouterLink>
+      )}
       {error ? <ErrorAlert error={error} onRetry={reload} /> : null}
       <Card className={`gap-0 py-0 transition-opacity ${loading && data ? 'opacity-60' : ''}`}>
         <div className="overflow-x-auto">

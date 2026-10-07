@@ -1,5 +1,5 @@
 import { AlertCircleIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
@@ -80,6 +80,12 @@ export function ResourceDetailPage() {
           <Facts
             items={[
               [t('resource.kind'), <ResourceKind key="k" resource={r} />],
+              ...(r.encrypted !== undefined
+                ? [[t('resource.encryption'), t(`resource.encryptionValues.${r.encrypted || 'none'}`)] as [string, ReactNode]]
+                : []),
+              ...(r.expires_at
+                ? [[t('resource.deletion'), <span key="d"><Time iso={r.expires_at} /> <span className="text-muted-foreground">· {t('resource.quickShareNote')}</span></span>] as [string, ReactNode]]
+                : []),
               [t('resource.size'), f.bytes(r.size)],
               [t('resource.version'), `v${r.version}`],
               [t('resource.history'), t('resource.historyValue', { count: r.history_versions, size: f.bytes(r.history_bytes) })],

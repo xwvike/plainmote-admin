@@ -12,6 +12,7 @@ import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { RequestError } from '@/lib/client'
 import { useFormat } from '@/lib/format'
+import { shareAddressForLookup } from '@/lib/share-link'
 import { resourceConfirmName, resourceTitle, secondaryFilename } from '@/lib/resource-name'
 import { useTargets } from '@/lib/target-context'
 import { ANONYMOUS_LOGIN, type Lookup, type Resource } from '@/lib/types'
@@ -27,13 +28,19 @@ export function LookupPage() {
   const [result, setResult] = useState<Lookup | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [dialog, setDialog] = useState<'revoke' | 'takedown' | null>(null)
+  const [dropped, setDropped] = useState(false)
 
   // The address is kept only long enough to send it; the result is looked up
   // again after an action through the link's own ID, never through the address.
   async function lookUp(event: React.FormEvent) {
     event.preventDefault()
-    const link = address.trim()
-    if (!link || busy) return
+    // An encrypted share's key follows '#'; it is cut here and never sent.
+    const { address: link, droppedFragment } = shareAddressForLookup(address)
+    setDropped(droppedFragment)
+    if (!link || busy) {
+      setAddress('')
+      return
+    }
     setBusy(true)
     setError(null)
     setResult(null)
@@ -74,6 +81,7 @@ export function LookupPage() {
                 <ShieldCheckIcon className="mt-px size-3.5 shrink-0" />
                 {t('lookup.privacy')}
               </FieldDescription>
+              {dropped && <FieldDescription className="text-xs text-success">{t('lookup.fragmentDropped')}</FieldDescription>}
             </Field>
           </form>
         </CardContent>

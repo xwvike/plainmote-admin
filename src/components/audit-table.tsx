@@ -15,8 +15,8 @@ function Target({ entry }: { entry: AuditEntry }) {
   const { t } = useTranslation()
   const types = t('audit.types', { returnObjects: true }) as Record<string, string>
   const label = entry.target_label || (
-    <span className="text-muted-foreground">
-      {t('resource.unnamed')} <Mono>{shortId(entry.target_id)}</Mono>
+    <span className="text-muted-foreground" title={t('audit.noLabel')}>
+      <Mono>{shortId(entry.target_id)}</Mono>
     </span>
   )
   const resourceId = typeof entry.detail?.resource_id === 'string' ? entry.detail.resource_id : null

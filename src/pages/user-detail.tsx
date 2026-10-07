@@ -1,4 +1,4 @@
-import { AlertCircleIcon, PlusIcon } from 'lucide-react'
+import { AlertCircleIcon, LockIcon, PlusIcon } from 'lucide-react'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useParams } from 'react-router'
@@ -62,6 +62,20 @@ export function UserDetailPage() {
         }
       />
       {user.error ? <ErrorAlert error={user.error} onRetry={user.reload} /> : null}
+
+      {u.master_password !== undefined && (
+        <div className="flex items-start gap-2.5 rounded-lg border px-4 py-3 text-[13px]">
+          <LockIcon className={`mt-0.5 size-4 shrink-0 ${u.master_password ? 'text-primary' : 'text-muted-foreground'}`} />
+          <div className="grid gap-0.5">
+            <span className="font-medium">
+              {u.master_password && u.master_password_at
+                ? t('user.masterPasswordSet', { date: f.date(u.master_password_at) })
+                : t('user.masterPasswordNone')}
+            </span>
+            {u.master_password && <span className="text-xs text-muted-foreground">{t('user.masterPasswordNote')}</span>}
+          </div>
+        </div>
+      )}
 
       {u.status === 'suspended' && (
         <Alert variant="destructive">
