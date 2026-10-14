@@ -6,9 +6,9 @@ import type { Resource } from './types'
 // is then called by what it does have, and failing that, marked as unnamed or
 // encrypted with the start of its ID so that two of them can be told apart.
 
-/** The resource's own name, its file name, or its remote host; null when it has none. */
+/** The resource's own name or its file name; null when it has neither. */
 export function resourceLabel(r: Resource): string | null {
-  return r.name || r.filename || r.origin_host || null
+  return r.name || r.filename || null
 }
 
 /** A name to use in sentences - dialog titles, notices. */

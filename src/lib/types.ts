@@ -8,8 +8,10 @@ export interface List<T> {
   total: number
 }
 
-export const ACCESS_OUTCOMES = ['success', 'expired', 'exhausted', 'revoked', 'upstream_error', 'taken_down', 'suspended'] as const
+export const ACCESS_OUTCOMES = ['success', 'expired', 'exhausted', 'revoked', 'taken_down', 'suspended'] as const
 export type AccessOutcome = (typeof ACCESS_OUTCOMES)[number]
+/** Counts by outcome. Outcomes no longer produced, such as upstream_error, may linger until their records are pruned. */
+export type AccessCounts = Partial<Record<AccessOutcome, number>> & Record<string, number | undefined>
 
 export interface Overview {
   version: string
@@ -28,7 +30,6 @@ export interface Overview {
   users: { total: number; suspended: number; signed_in_last_30d: number; master_password?: number }
   resources: {
     total: number
-    remote: number
     taken_down: number
     current_bytes: number
     history_bytes: number
@@ -39,7 +40,7 @@ export interface Overview {
     encrypted?: number
   }
   links: { live: number; ended_last_7d: number }
-  access: { last_24h: Record<AccessOutcome, number>; last_7d: Record<AccessOutcome, number> }
+  access: { last_24h: AccessCounts; last_7d: AccessCounts }
   anonymous: { live_pastes: number; bytes: number; limit_bytes: number }
   prune: { last_run_at: string; access_logs: number; sessions: number; pastes: number; versions: number } | null
 }
@@ -85,10 +86,8 @@ export interface Resource {
   owner: { id: string; login: string }
   name: string
   filename: string
-  kind: 'stored' | 'remote'
   content_type: string
   size: number
-  origin_host: string
   version: number
   history_versions: number
   history_bytes: number

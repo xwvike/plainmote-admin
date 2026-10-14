@@ -52,7 +52,13 @@ export function OverviewPage() {
       .filter((item): item is [ParseKeys, number] => item[1] !== undefined)
       .map(([key, n]) => t(key, { n: f.number(n) }) as string)
       .join(' · ')
-  const max7d = Math.max(1, ...ACCESS_OUTCOMES.map((k) => o.access.last_7d[k] ?? 0))
+  // Outcomes beyond the current set are shown while records of them remain.
+  const lingering = [...new Set([...Object.keys(o.access.last_24h), ...Object.keys(o.access.last_7d)])].filter(
+    (k) => !(ACCESS_OUTCOMES as readonly string[]).includes(k) && ((o.access.last_24h[k] ?? 0) > 0 || (o.access.last_7d[k] ?? 0) > 0),
+  )
+  const outcomes = [...ACCESS_OUTCOMES, ...lingering]
+  const outcomeLabels = t('outcomes', { returnObjects: true }) as Record<string, string>
+  const max7d = Math.max(1, ...outcomes.map((k) => o.access.last_7d[k] ?? 0))
   const modes = t('overview.registrationModes', { returnObjects: true }) as Record<string, string>
 
   return (
@@ -100,7 +106,6 @@ export function OverviewPage() {
           sub={parts([
             ['overview.resourcesParts.quickShares', o.resources.quick_shares],
             ['overview.resourcesParts.encrypted', o.resources.encrypted],
-            ['overview.resourcesParts.remote', o.resources.remote],
             ['overview.resourcesParts.takenDown', o.resources.taken_down],
           ])}
         />
@@ -132,11 +137,11 @@ export function OverviewPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {ACCESS_OUTCOMES.map((outcome) => {
+                {outcomes.map((outcome) => {
                   const week = o.access.last_7d[outcome] ?? 0
                   return (
                     <TableRow key={outcome}>
-                      <TableCell>{t(`outcomes.${outcome}`)}</TableCell>
+                      <TableCell>{outcomeLabels[outcome] ?? outcome}</TableCell>
                       <TableCell className="text-right">{f.number(o.access.last_24h[outcome] ?? 0)}</TableCell>
                       <TableCell>
                         <div className="flex min-w-40 items-center gap-2.5">

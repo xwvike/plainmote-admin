@@ -17,7 +17,7 @@ import { useFormat } from '@/lib/format'
 import { resourceConfirmName, resourceTitle, secondaryFilename } from '@/lib/resource-name'
 import { useTargets } from '@/lib/target-context'
 import { ANONYMOUS_LOGIN, type AuditEntry, type Link, type List, type Resource } from '@/lib/types'
-import { OwnerName, ResourceKind, ResourceName } from './resources'
+import { OwnerName, ResourceName } from './resources'
 
 const LINKS_SIZE = 20
 
@@ -79,7 +79,6 @@ export function ResourceDetailPage() {
         <CardContent>
           <Facts
             items={[
-              [t('resource.kind'), <ResourceKind key="k" resource={r} />],
               ...(r.encrypted !== undefined
                 ? [[t('resource.encryption'), t(`resource.encryptionValues.${r.encrypted || 'none'}`)] as [string, ReactNode]]
                 : []),

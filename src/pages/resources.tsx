@@ -18,15 +18,13 @@ const SIZE = 20
 
 const tag = 'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs whitespace-nowrap'
 
-/** Where the content lives, and whether it is a quick share or encrypted. */
-export function ResourceKind({ resource: r }: { resource: Resource }) {
+/** Whether it is a quick share or encrypted; nothing for a plain resource. */
+function ResourceTags({ resource: r }: { resource: Resource }) {
   const { t } = useTranslation()
   const f = useFormat()
+  if (!r.expires_at && !r.encrypted) return null
   return (
     <span className="inline-flex flex-wrap gap-1">
-      <span className={`${tag} bg-muted text-muted-foreground`}>
-        {r.kind === 'stored' ? t('resources.stored') : <>{t('resources.remote')} · <Mono>{r.origin_host}</Mono></>}
-      </span>
       {r.expires_at && (
         <span className={`${tag} bg-warning/15 text-warning`} title={r.expires_at}>
           <ClockIcon className="size-3" />
@@ -143,7 +141,6 @@ export function ResourcesPage() {
               <TableRow>
                 <TableHead className="pl-4">{t('resources.col.resource')}</TableHead>
                 <TableHead>{t('resources.col.owner')}</TableHead>
-                <TableHead>{t('resources.col.kind')}</TableHead>
                 <TableHead className="text-right">{t('resources.col.size')}</TableHead>
                 <TableHead>{t('resources.col.version')}</TableHead>
                 <TableHead className="text-right">{t('resources.col.liveLinks')}</TableHead>
@@ -152,8 +149,8 @@ export function ResourcesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.items.length === 0 && <EmptyRow colSpan={8}>{t('resources.empty')}</EmptyRow>}
-              {!data && !error && <EmptyRow colSpan={8}>{t('common.loading')}</EmptyRow>}
+              {data?.items.length === 0 && <EmptyRow colSpan={7}>{t('resources.empty')}</EmptyRow>}
+              {!data && !error && <EmptyRow colSpan={7}>{t('common.loading')}</EmptyRow>}
               {data?.items.map((r) => (
                 <TableRow
                   key={r.id}
@@ -163,13 +160,13 @@ export function ResourcesPage() {
                   onKeyDown={(e) => e.key === 'Enter' && navigate(`/resources/${r.id}`)}
                 >
                   <TableCell className="pl-4">
-                    <div className="grid max-w-72">
-                      <span className="truncate font-medium"><ResourceName resource={r} /></span>
-                      {secondaryFilename(r) && <Mono className="truncate text-xs text-muted-foreground">{secondaryFilename(r)}</Mono>}
+                    <div className="grid max-w-80 justify-items-start gap-0.5">
+                      <span className="max-w-full truncate font-medium"><ResourceName resource={r} /></span>
+                      {secondaryFilename(r) && <Mono className="max-w-full truncate text-xs text-muted-foreground">{secondaryFilename(r)}</Mono>}
+                      <ResourceTags resource={r} />
                     </div>
                   </TableCell>
                   <TableCell><OwnerName resource={r} /></TableCell>
-                  <TableCell><ResourceKind resource={r} /></TableCell>
                   <TableCell className="text-right">{f.bytes(r.size)}</TableCell>
                   <TableCell>
                     v{r.version}
